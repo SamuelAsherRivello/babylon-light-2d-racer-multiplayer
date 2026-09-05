@@ -57,6 +57,7 @@ In single player, drive the yellow car with **W** to accelerate, **S** to brake,
 
 <!-- AI: Link to the main documentation files that actually exist using relative Markdown links and a short purpose for each. Update links when files move; do not reference documentation inherited from another project unless present here. -->
 - [README.md](README.md): Setup, controls, and release instructions.
+- [Performance verification](2D%20Racer/documentation/PERFORMANCE.md): Measurements, limits, and the optional FPS meter.
 - [Multiplayer and server setup](2D%20Racer/documentation/MULTIPLAYER.md): Complete local, SSH-tunnel, HTTPS, and container instructions.
 
 ### 📝 Structure

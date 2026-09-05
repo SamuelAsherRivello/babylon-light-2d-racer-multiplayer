@@ -1,11 +1,13 @@
-import { createEngine, createSceneContext, createArcRotateCamera, createHemisphericLight, createDirectionalLight, createStandardMaterial, createBox, createCylinder, createSphere, createMeshFromData, createTransformNode, addToScene, setParent, registerScene, startEngine, resizeEngine, disposeEngine, type Mesh, type TransformNode, type StandardMaterialProps } from '@babylonjs/lite';
+import { batchStaticMeshes } from './static-batches';
+import { createEngine, createSceneContext, createArcRotateCamera, createHemisphericLight, createDirectionalLight, createStandardMaterial, createBox, createCylinder, createSphere, createMeshFromData, createTransformNode, addToScene, setParent, registerScene, renderFrame, setMeshVisible, setGpuTimingEnabled, resizeEngine, disposeEngine, type Mesh, type TransformNode, type StandardMaterialProps } from '@babylonjs/lite';
 import { TRACK, TRACK_LENGTH, sampleTrack, trackDistance } from './track';
 import type { Car, RaceState } from './types';
 
 /** A deliberately presentation-only world: all positions come from the simulation. */
 export async function createWorld(canvas: HTMLCanvasElement, onProgress: (message: string) => void = () => {}) {
   onProgress('Loading graphics…');
-  const engine = await createEngine(canvas, { maxDevicePixelRatio: 1.5, msaaSamples: 4 });
+  const engine = await createEngine(canvas, { maxDevicePixelRatio: 1, msaaSamples: 1 });
+  if (import.meta.env.DEV || new URLSearchParams(location.search).has('stats')) setGpuTimingEnabled(engine, true);
   onProgress('Building the track…');
   const scene = createSceneContext(engine);
   scene.clearColor = { r: 0.56, g: 0.79, b: 0.87, a: 1 };
@@ -15,6 +17,8 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
   scene.camera = camera;
   addToScene(scene, createHemisphericLight([0, 1, 0], 0.65));
   addToScene(scene, createDirectionalLight([-0.6, -1, 0.35], 0.35));
+  let collectingStatic = true;
+  const staticMeshes: Mesh[] = [];
   const materials = new Map<string, StandardMaterialProps>();
   function mat(hex: string) {
     let material = materials.get(hex);
@@ -34,6 +38,7 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
     mesh.position.x = x; mesh.position.y = y; mesh.position.z = z;
     mesh.rotation.x = mesh.rotation.y = mesh.rotation.z = 0;
     addToScene(scene, mesh);
+    if (collectingStatic) staticMeshes.push(mesh);
     return mesh;
   }
   function box(color: string, x: number, y: number, z: number, w: number, h: number, d: number, heading = 0, parent?: TransformNode) {
@@ -136,6 +141,8 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
       box('#ad8559', v, 0.65, side * 92, 0.65, 1.5, 0.65);
     }
   }
+  collectingStatic = false;
+  const batching = batchStaticMeshes(engine, scene, staticMeshes);
   const cars = new Map<number, { root: TransformNode; shadow: Mesh; frontWheels: Mesh[]; wasAirborne: boolean }>();
   function carModel(car: Car) {
     const root = createTransformNode('racer ' + car.id); addToScene(scene, root);
@@ -167,7 +174,7 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
   }
   const particles = Array.from({ length: 90 }, () => {
     const mesh = sphere('#e5d3a2', 0, -20, 0, 1); mesh.scaling.x = mesh.scaling.y = mesh.scaling.z = 0.001;
-    return { mesh, life: 0, maxLife: 1, vx: 0, vz: 0 };
+    return { mesh, visible: true, life: 0, maxLife: 1, vx: 0, vz: 0 };
   });
   let cursor = 0, emitClock = 0;
   function emit(car: Car, count: number, landing = false) {
@@ -178,6 +185,7 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
       p.mesh.position.y = 0.2;
       p.mesh.position.z = car.z - Math.cos(car.heading) - Math.sin(car.heading) * side * 0.8;
       p.mesh.material = mat(car.offroad || landing ? '#d3c28f' : '#dce2d8');
+      if (!p.visible) { setMeshVisible(p.mesh,true); p.visible=true; }
       p.life = p.maxLife = landing ? 0.8 : 0.55;
       p.vx = (random() - 0.5) * (landing ? 7 : 2);
       p.vz = (random() - 0.5) * (landing ? 7 : 2);
@@ -191,7 +199,7 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
   onProgress('Starting the first frame…');
   // Background/occluded windows may not receive animation frames. Scheduling
   // rendering must not block network menus on the first frame being painted.
-  void startEngine(engine);
+  // The game loop updates transforms and renders once in the same animation frame.
   let initialized = false;
   return {
     update(state: RaceState, dt: number) {
@@ -222,12 +230,15 @@ export async function createWorld(canvas: HTMLCanvasElement, onProgress: (messag
         visual.wasAirborne = car.airborne;
       }
       for (const p of particles) {
+        if (p.life <= 0) { if(p.visible){setMeshVisible(p.mesh,false);p.visible=false;} continue; }
         p.life = Math.max(0, p.life - dt);
         p.mesh.position.x += p.vx * dt; p.mesh.position.z += p.vz * dt; p.mesh.position.y += dt * 0.55;
         const scale = p.life > 0 ? (0.18 + (1 - p.life / p.maxLife) * 0.7) * Math.min(p.life * 5, 1) : 0.001;
         p.mesh.scaling.x = p.mesh.scaling.y = p.mesh.scaling.z = scale;
       }
     },
+    render(dt: number) { renderFrame(engine,dt * 1000); },
+    stats() { return { drawCalls: engine.drawCallCount, batching, gpuMs: engine.gpuFrameTimeMs }; },
     resize() { resizeEngine(engine); },
     dispose() { disposeEngine(engine); },
   };

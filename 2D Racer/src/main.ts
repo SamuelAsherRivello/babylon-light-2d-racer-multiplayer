@@ -1,3 +1,4 @@
+import { createPerformanceMeter } from './performance-meter';
 import './style.css';
 import { createDrivingControls } from './driving-controls';
 import { createRace, startRace, stepRace } from './simulation';
@@ -74,8 +75,11 @@ async function boot(){
   try{
     const world=await createWorld(canvas,message=>multiplayerUI.notice(message));ready=true;multiplayerUI.busy(false);multiplayerUI.notice('');
     window.addEventListener('resize',()=>world.resize());
-    let last=performance.now(),accumulated=0;
+    const meter=createPerformanceMeter(root,()=>world.stats());
+    const profileNoRender=import.meta.env.DEV && new URLSearchParams(location.search).has('profile-no-render');
+    let last=performance.now(),accumulated=0,workMs=0,hudElapsed=0,lastHudPhase=state.phase;
     function frame(now:number){
+      const workStart=performance.now();
       const dt=Math.min((now-last)/1000,.1);last=now;
       if(networkMode){
         accumulated=0;
@@ -92,10 +96,10 @@ async function boot(){
         accumulated+=document.hidden?0:dt;
         while(accumulated>=1/120){effects.push(...stepRace(state,input,1/120));accumulated-=1/120;}
       }
-      world.update(state,dt);audio.update(state,effects.splice(0),dt);ui.update(state);controls.setEnabled(state.phase==='racing'||state.phase==='countdown');requestAnimationFrame(frame);
+      world.update(state,dt);if(!profileNoRender)world.render(dt);audio.update(state,effects.splice(0),dt);hudElapsed+=dt;if(hudElapsed>=.1 || state.phase!==lastHudPhase){ui.update(state);hudElapsed=0;lastHudPhase=state.phase;}workMs=performance.now()-workStart;meter.frame(now,workMs);controls.setEnabled(state.phase==='racing'||state.phase==='countdown');requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
-    if(import.meta.env.DEV)Object.assign(window,{__rally:{get state(){return state;},input}});
+    if(import.meta.env.DEV)Object.assign(window,{__rally:{get state(){return state;},input,stats:()=>({...world.stats(),workMs,hidden:document.hidden})}});
   }catch(error){console.error(error);ui.showError(`A WebGPU-capable browser is required. ${error instanceof Error?error.message:String(error)}`);}
 }
 void boot();

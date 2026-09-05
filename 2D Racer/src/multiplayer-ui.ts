@@ -54,7 +54,7 @@ export function createMultiplayerUI(root:HTMLElement,callbacks:{host:(endpoint:s
       const start=q<HTMLButtonElement>('.race-start');start.hidden=sessionId!==data.hostId;start.disabled=data.members.length===0 || !data.members.every(m=>m.ready);
       q('.lobby-notice').textContent=start.hidden?'Waiting for the host to start once everyone is ready.':'Start alone or with friends once everyone here is Ready.';
     },
-    racing(){root.dataset.network='race';lobbyPanel.hidden=true;leaveRace.hidden=false;},
+    racing(){if(root.dataset.network==='race')return;root.dataset.network='race';lobbyPanel.hidden=true;leaveRace.hidden=false;},
     reset(message=''){root.dataset.network='';lobbyPanel.hidden=leaveRace.hidden=true;showNotice(message);this.busy(false);},
   };
 }
