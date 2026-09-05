@@ -4,7 +4,6 @@ export function createMultiplayerUI(root:HTMLElement,callbacks:{host:(endpoint:s
   const demoOnly=import.meta.env.VITE_SINGLE_PLAYER_DEMO==='true';
   root.classList.add('multiplayer-ui');
   root.querySelector('.start-button')!.textContent='SINGLE PLAYER';
-  root.querySelector('.intro')!.textContent=demoOnly?'SINGLE-PLAYER DEMO · Race the clock solo.':'Race the clock solo, or race your friends.';
   const controls=document.createElement('div');controls.className='multiplayer-controls';
   controls.innerHTML=`<label>Your name<input class="racer-name" maxlength="16" placeholder="Racer" autocomplete="nickname"></label>
     <div class="host-row"><label>Max players<select class="room-capacity"><option value="2">2 players</option><option value="3">3 players</option><option value="4" selected>4 players</option></select></label><button class="secondary host-button">HOST MULTIPLAYER</button></div>
@@ -14,10 +13,10 @@ export function createMultiplayerUI(root:HTMLElement,callbacks:{host:(endpoint:s
   controls.hidden=demoOnly;
   if(demoOnly){
     const explanation=document.createElement('p');explanation.className='tip';
-    explanation.innerHTML='Multiplayer requires a separately running Colyseus server; GitHub Pages cannot run it. <a href="https://github.com/SamuelAsherRivello/babylon-light-2d-racer-multiplayer/blob/main/2D%20Racer/documentation/MULTIPLAYER.md">Multiplayer setup instructions</a>.';
+    explanation.innerHTML='Single-player demo. Multiplayer requires a separately running Colyseus server; GitHub Pages cannot run it. <a href="https://github.com/SamuelAsherRivello/babylon-light-2d-racer-multiplayer/blob/main/2D%20Racer/documentation/MULTIPLAYER.md">Multiplayer setup instructions</a>.';
     controls.after(explanation);
   }
-  const notice=document.createElement('p');notice.className='session-notice';notice.setAttribute('role','status');root.querySelector('.intro')!.after(notice);
+  const notice=document.createElement('p');notice.className='session-notice';notice.setAttribute('role','status');root.querySelector('h1')!.after(notice);
   const lobbyPanel=document.createElement('section');lobbyPanel.className='lobby-panel';lobbyPanel.hidden=true;
   lobbyPanel.setAttribute('aria-label','Multiplayer lobby');
   lobbyPanel.innerHTML=`<div class="eyebrow">MULTIPLAYER · PIT LANE</div><h2>YOUR LOBBY</h2><p>Share this code with your friends outside the game.</p><div class="invite-row"><strong class="invite-code"></strong><button class="copy-code secondary">COPY CODE</button></div><p class="lobby-status" role="status"></p><ol class="member-list"></ol><button class="ready-button primary">READY</button><button class="race-start secondary">START GAME</button><button class="leave-lobby secondary">LEAVE LOBBY</button><p class="lobby-notice" role="status"></p><p class="tip">Everyone returns to the main menu after the race. Each new race gets a new code.</p>`;

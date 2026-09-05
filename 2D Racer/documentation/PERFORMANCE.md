@@ -34,7 +34,7 @@ The independent-context race measured approximately 0.7–1.0 ms client CPU work
 
 - Bake 930 immutable scenery meshes into 26 material batches, preserving world-space geometry and inverse-transpose transformed normals.
 - Update camera/car transforms and render in one animation-frame loop, rather than two independent loops.
-- Use native CSS-pixel resolution and single-sample rendering to reduce per-instance GPU load.
+- Restore the original 1.5 device-pixel-ratio cap and 4x MSAA for sharp rendering. The temporary 1x/no-antialiasing setting was removed after network latency was isolated. The renderer measurements above used that temporary setting.
 - Skip expired-particle transform work; hide inactive particles.
 - Update HUD text at 10 Hz with immediate phase changes; do not rewrite multiplayer visibility on every server snapshot.
 - Send snapshots at a measured 60 Hz using a 120 Hz simulation timer with retained fractional send time.

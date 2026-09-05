@@ -6,7 +6,7 @@ import type { Car, RaceState } from './types';
 /** A deliberately presentation-only world: all positions come from the simulation. */
 export async function createWorld(canvas: HTMLCanvasElement, onProgress: (message: string) => void = () => {}) {
   onProgress('Loading graphics…');
-  const engine = await createEngine(canvas, { maxDevicePixelRatio: 1, msaaSamples: 1 });
+  const engine = await createEngine(canvas, { maxDevicePixelRatio: 1.5, msaaSamples: 4 });
   if (import.meta.env.DEV || new URLSearchParams(location.search).has('stats')) setGpuTimingEnabled(engine, true);
   onProgress('Building the track…');
   const scene = createSceneContext(engine);

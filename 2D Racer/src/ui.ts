@@ -5,9 +5,7 @@ export function createUI(root: HTMLElement, callbacks: { onStart: () => void; on
   root.innerHTML = `
     <header class="topbar"><div class="wordmark"><span class="flag-icon" aria-hidden="true"></span> POCKET RALLY <span class="edition">HILLSIDE CUP</span></div><button class="sound-button" aria-label="Mute sound" aria-pressed="false">SOUND ON <span aria-hidden="true">♪</span></button></header>
     <section class="menu-panel" aria-label="Start menu">
-      <div class="eyebrow"><span class="live-dot"></span> SMALL CARS. BIG AIR.</div>
       <h1>POCKET<br><span>RALLY.</span></h1>
-      <p class="intro">A little dirt. A lot of speed.<br>One lap to beat the clock.</p>
       <div class="challenge"><div><strong>30</strong><span>SECONDS</span></div><div><strong>01</strong><span>LAP TO WIN</span></div><div><strong>03</strong><span>RIVAL RACERS</span></div></div>
       <button class="primary start-button">LET’S RACE <span aria-hidden="true">↗</span></button>
       <div class="controls"><div><kbd>W</kbd><span>Accelerate</span></div><div><kbd>S</kbd><span>Brake</span></div><div><kbd>A</kbd><kbd>D</kbd><span>Steer</span></div></div>

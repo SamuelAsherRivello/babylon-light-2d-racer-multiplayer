@@ -76,3 +76,13 @@ h2{font-size:clamp(32px,12cqw,52px)}
 .member-list li{overflow-wrap:anywhere}
 .leave-race{left:var(--edge);top:auto;bottom:calc(166px + var(--safe-bottom));transform:none;padding:9px;font-size:9px}
 @container(max-width:280px){.topbar{gap:4px;padding-inline:8px}.wordmark{gap:4px;padding:6px}.flag-icon{display:none}.menu-panel,.multiplayer-ui .menu-panel,.lobby-panel{top:59px;max-height:calc(100% - 88px);padding:12px}.timer-box,.race-stats{top:59px;padding:7px}.race-stats{gap:7px}.primary{font-size:11px;padding:11px}.challenge>div+div{padding-left:6px}.eyebrow{font-size:8px;letter-spacing:.8px}.virtual-controller{left:8px;right:8px;gap:6px}.steering-controls,.pedal-controls{gap:5px}.lap-meter{bottom:94px}.speed-box{bottom:143px}.leave-race{bottom:150px}.result-wrap{padding-top:56px}}
+
+/* Keep the start actions in the portrait frame without a scrolling menu. */
+.multiplayer-ui .menu-panel{top:calc(64px + var(--safe-top));padding:clamp(12px,4cqw,22px);max-height:calc(100% - 94px - var(--safe-top) - var(--safe-bottom))}
+.multiplayer-ui .menu-panel h1{font-size:clamp(27px,9cqw,46px);line-height:1;margin:2px 0 14px;letter-spacing:-1px;white-space:nowrap}
+.multiplayer-ui .menu-panel h1 br{display:none}
+.multiplayer-ui .menu-panel h1 span{margin-left:.15em}
+.multiplayer-controls{margin-top:12px;gap:9px}
+.host-row,.join-row{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+.multiplayer-ui .menu-panel .controls{margin-top:12px;gap:6px}
+.multiplayer-ui .menu-panel>.tip{margin-top:9px}
