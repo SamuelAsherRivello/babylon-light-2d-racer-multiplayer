@@ -21,3 +21,9 @@ Babylon Lite requires WebGPU and provides no WebGL fallback. Unsupported devices
 - Touch checks use Edge browser emulation; physical Android/iOS hardware has not been tested.
 
 - Host starts verified with one, two, three, and four humans; empty room seats do not block the start or spawn bots.
+
+## Additional-window startup
+
+- Reproduced a disabled Host/Join menu by suspending requestAnimationFrame before startup. The same browser check passed after removing the first-frame wait from world startup.
+- A fourth client with suspended animation frames joined a three-player lobby successfully; the host displayed 4 / 4 players.
+- Rendering starts normally when Chrome supplies frames; preparing the world no longer waits for a painted frame.

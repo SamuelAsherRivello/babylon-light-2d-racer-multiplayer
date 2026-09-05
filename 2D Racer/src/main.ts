@@ -72,7 +72,7 @@ document.addEventListener('visibilitychange',clearInput);
 window.addEventListener('pagehide',()=>network.leave());
 async function boot(){
   try{
-    const world=await createWorld(canvas);ready=true;multiplayerUI.busy(false);multiplayerUI.notice('');
+    const world=await createWorld(canvas,message=>multiplayerUI.notice(message));ready=true;multiplayerUI.busy(false);multiplayerUI.notice('');
     window.addEventListener('resize',()=>world.resize());
     let last=performance.now(),accumulated=0;
     function frame(now:number){

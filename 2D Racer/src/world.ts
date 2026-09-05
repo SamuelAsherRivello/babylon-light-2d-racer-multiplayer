@@ -3,8 +3,10 @@ import { TRACK, TRACK_LENGTH, sampleTrack, trackDistance } from './track';
 import type { Car, RaceState } from './types';
 
 /** A deliberately presentation-only world: all positions come from the simulation. */
-export async function createWorld(canvas: HTMLCanvasElement) {
+export async function createWorld(canvas: HTMLCanvasElement, onProgress: (message: string) => void = () => {}) {
+  onProgress('Loading graphics…');
   const engine = await createEngine(canvas, { maxDevicePixelRatio: 1.5, msaaSamples: 4 });
+  onProgress('Building the track…');
   const scene = createSceneContext(engine);
   scene.clearColor = { r: 0.56, g: 0.79, b: 0.87, a: 1 };
   const camera = createArcRotateCamera(-Math.PI / 2, 0.62, 72, { x: 0, y: 0, z: 0 });
@@ -184,8 +186,12 @@ export async function createWorld(canvas: HTMLCanvasElement) {
   // Register all car parts up front: Lite compiles the scene's pipelines at registration.
   const palette = ['#ffca3a', '#ff597b', '#6bdbff', '#b09bff'];
   for (let id = 0; id < 4; id++) carModel({ id, color: palette[id], x: 0, z: 0 } as Car);
+  onProgress('Preparing track graphics…');
   await registerScene(scene);
-  await startEngine(engine);
+  onProgress('Starting the first frame…');
+  // Background/occluded windows may not receive animation frames. Scheduling
+  // rendering must not block network menus on the first frame being painted.
+  void startEngine(engine);
   let initialized = false;
   return {
     update(state: RaceState, dt: number) {
