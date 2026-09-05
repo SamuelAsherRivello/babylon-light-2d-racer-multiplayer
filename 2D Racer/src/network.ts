@@ -4,7 +4,15 @@ import type { Finished, Lobby, Snapshot } from './protocol';
 
 export function createNetwork(callbacks:{lobby:(data:Lobby,sessionId:string)=>void;snapshot:(data:Snapshot)=>void;effect:(event:GameEvent)=>void;closed:(message:string,winnerId?:number)=>void;notice:(message:string)=>void}) {
   let room:Room|undefined, generation=0, ticker:ReturnType<typeof setInterval>|undefined;
-  const stop=()=>{if(ticker) clearInterval(ticker);ticker=undefined;};
+  let lastInput='',lastSent=0;
+  const arrivals:number[]=[];
+  const sendInput=(input:Input,force=false)=>{
+    if(!room)return;
+    const key=JSON.stringify(input),now=performance.now();
+    if(!force && key===lastInput && now-lastSent<100)return;
+    room.send('input',{...input});lastInput=key;lastSent=now;
+  };
+  const stop=()=>{if(ticker) clearInterval(ticker);ticker=undefined;lastInput='';arrivals.length=0;};
   async function connect(endpoint:string,name:string,capacity?:number,code?:string) {
     const attempt=++generation; stop();
     const old=room;room=undefined;if(old) void old.leave();
@@ -16,7 +24,7 @@ export function createNetwork(callbacks:{lobby:(data:Lobby,sessionId:string)=>vo
     if(attempt!==generation){void joined.leave();return;}
     room=joined; room.reconnection.enabled=false;
     joined.onMessage('lobby',(data:Lobby)=>{if(room===joined)callbacks.lobby(data,joined.sessionId);});
-    joined.onMessage('snapshot',(data:Snapshot)=>{if(room===joined)callbacks.snapshot(data);});
+    joined.onMessage('snapshot',(data:Snapshot)=>{if(room===joined){arrivals.push(performance.now());if(arrivals.length>120)arrivals.shift();callbacks.snapshot(data);}});
     joined.onMessage('effect',(event:GameEvent)=>{if(room===joined)callbacks.effect(event);});
     joined.onMessage('notice',(message:string)=>callbacks.notice(message));
     joined.onMessage('finished',(data:Finished)=>{
@@ -30,8 +38,10 @@ export function createNetwork(callbacks:{lobby:(data:Lobby,sessionId:string)=>vo
     host:(endpoint:string,name:string,capacity:number)=>connect(endpoint,name,capacity),
     join:(endpoint:string,name:string,code:string)=>connect(endpoint,name,undefined,code.trim().toUpperCase()),
     ready:(ready:boolean)=>room?.send('ready',ready), start:()=>room?.send('start'),
-    stream(getInput:()=>Input){stop();ticker=setInterval(()=>room?.send('input',getInput()),1000/30);},
-    clearInput(){room?.send('input',{throttle:false,brake:false,left:false,right:false});},
+    sendInput,
+    stats:()=>({snapshotHz:arrivals.length>1?(arrivals.length-1)*1000/(arrivals.at(-1)!-arrivals[0]):0,snapshotAgeMs:arrivals.length?performance.now()-arrivals.at(-1)!:null}),
+    stream(getInput:()=>Input){stop();sendInput(getInput(),true);ticker=setInterval(()=>sendInput(getInput(),true),100);},
+    clearInput(){sendInput({throttle:false,brake:false,left:false,right:false},true);},
     leave(){generation++;stop();const old=room;room=undefined;if(old)void old.leave();},
   };
 }

@@ -44,7 +44,8 @@ export class RaceRoom extends Room {
       if(!['throttle','brake','left','right'].every(k=>typeof packet[k]==='boolean')) return;
       this.controls.set(client.sessionId,{input:{throttle:packet.throttle as boolean,brake:packet.brake as boolean,left:packet.left as boolean,right:packet.right as boolean},at:Date.now()});
     });
-    this.setSimulationInterval(dt=>this.tick(dt),1000/60);
+    // Sample faster than the send cadence so coarse OS timers do not halve updates.
+    this.setSimulationInterval(dt=>this.tick(dt),1000/120);
     this.clock.setTimeout(()=>{if(!this.running) this.finish('The lobby expired. Host a new game to get a new code.');},10*60*1000);
   }
   onJoin(client:Client,options:{name?:unknown}) {
@@ -68,7 +69,7 @@ export class RaceRoom extends Room {
     const lobby:Lobby={code:this.roomId,capacity:this.capacity,hostId:this.hostId,members:[...this.members.values()],phase:this.running?(this.race?.phase==='countdown'?'countdown':'racing'):'lobby'};
     if(client) client.send('lobby',lobby); else this.broadcast('lobby',lobby);
   }
-  private broadcastSnapshot(){if(this.race) this.broadcast('snapshot',{race:this.race,sequence:++this.sequence});}
+  private broadcastSnapshot(){if(this.race) this.broadcast('snapshot',{race:this.race,sequence:++this.sequence,serverTime:(this.race.elapsed-this.race.countdown)*1000});}
   tick(dtMs:number) {
     if(!this.running || !this.race || this.ending) return;
     const inputs=[...this.members.values()].map(m=>{const control=this.controls.get(m.sessionId);return control && Date.now()-control.at<300 ? control.input : idle();});
@@ -80,7 +81,7 @@ export class RaceRoom extends Room {
     }});
     if(before==='countdown' && this.race.phase==='racing') this.broadcast('effect','go');
     this.snapshotTime+=dtMs;
-    if(this.snapshotTime>=1000/30){this.snapshotTime=0;this.broadcastSnapshot();}
+    if(this.snapshotTime>=1000/60){this.snapshotTime%=1000/60;this.broadcastSnapshot();}
     if(this.race.phase==='won' || this.race.phase==='lost') {
       const winner=[...this.members.values()].find(m=>m.carId===this.race!.winnerId);
       this.finish(winner?`${winner.name} won in ${this.race.elapsed.toFixed(2)}s! Host or join a new race.`:'Time is up! Nobody completed a lap. Host or join a new race.',winner?.carId);

@@ -2,7 +2,7 @@ import type { Input } from './types';
 import { createInputState } from './input-state';
 
 /** Independent input sources keep releasing touch from cancelling a held key. */
-export function createDrivingControls(root: HTMLElement, input: Input) {
+export function createDrivingControls(root: HTMLElement, input: Input, onChange:()=>void=()=>{}) {
   const state = createInputState(input);
   const panel = document.createElement('nav');
   panel.className = 'virtual-controller';
@@ -11,11 +11,11 @@ export function createDrivingControls(root: HTMLElement, input: Input) {
   root.append(panel);
   const buttons = [...panel.querySelectorAll<HTMLButtonElement>('button')];
   let enabled = false;
-  const paint = () => buttons.forEach(button => {
+  const paint = () => { buttons.forEach(button => {
     const held = input[button.dataset.control as keyof Input];
     button.classList.toggle('is-held', held);
     button.setAttribute('aria-pressed', String(held));
-  });
+  }); onChange(); };
   const clear = () => { state.clear(); paint(); };
   buttons.forEach(button => {
     button.addEventListener('pointerdown', event => {

@@ -1,5 +1,18 @@
 # Performance verification
 
+## Multiplayer network timing (2026-09-05)
+
+The original snapshot accumulator discarded its remainder after every send. Four real SDK clients measured only 20.1 updates/second instead of the intended 30. A 60 Hz simulation timer also suffered coarse Windows scheduling; sampling simulation at 120 Hz and preserving the snapshot accumulator produced 60.05 updates/second for all four clients over five seconds.
+
+- Original packet gap: p95 63 ms, maximum 64 ms.
+- Corrected packet gap: p95 31 ms, maximum 33 ms. The client timeline smooths this scheduling variation.
+- One local SDK input-to-authoritative-motion sample: 16.5 ms after the final change. This is a sample, not a latency percentile.
+- Four real Edge browser clients joined, readied and drove using keyboard events: approximately 32 ms from the test trigger to visible local motion on each client, 56.2 received updates/second in the final two-second window, and 56.6 render FPS each. Trigger timing includes Playwright event dispatch.
+
+These are localhost measurements on one physical machine. Internet latency and other hardware remain unmeasured. Render FPS and network update rate are separate metrics.
+
+Run `npm exec -- tsx scripts/profile-network.ts` with the local server running for a repeatable four-connection network check. The script closes its test rooms afterwards.
+
 ## Current local evidence (2026-09-05)
 
 Measured in Edge on the development Windows machine, with 300 animation-frame samples per client. These are development-browser measurements, not a claim about untested devices.
@@ -22,11 +35,13 @@ The independent-context race measured approximately 0.7–1.0 ms client CPU work
 - Use native CSS-pixel resolution and single-sample rendering to reduce per-instance GPU load.
 - Skip expired-particle transform work; hide inactive particles.
 - Update HUD text at 10 Hz with immediate phase changes; do not rewrite multiplayer visibility on every server snapshot.
-- Retain 30 Hz server snapshots and per-render-frame positional/heading smoothing.
+- Send snapshots at a measured 60 Hz using a 120 Hz simulation timer with retained fractional send time.
+- Send control transitions immediately, with 100 ms heartbeats to preserve held input.
+- Interpolate remote cars on a 33 ms timestamp buffer; project the local car for at most 50 ms between packets, without exponential catch-up delay.
 
 ## Check another machine
 
-Open the normal game with `?stats=1`, for example `http://127.0.0.1:2567/?stats=1`. The optional meter displays FPS and the 95th-percentile interval across the latest 60 frames. Hover it for average client CPU work, most recent GPU timing (if supported), and draw calls. Measure an active race with all expected instances running. Browser scheduling and display refresh affect the result.
+Open the normal game with `?stats=1`, for example `http://127.0.0.1:2567/?stats=1`. The optional meter displays FPS and the 95th-percentile interval across the latest 60 frames. During multiplayer it also displays NET updates/second separately from FPS. Hover it for average client CPU work, most recent GPU timing (if supported), and draw calls. Measure an active race with all expected instances running. Browser scheduling and display refresh affect the result.
 
 For the reproducible four-context developer check:
 

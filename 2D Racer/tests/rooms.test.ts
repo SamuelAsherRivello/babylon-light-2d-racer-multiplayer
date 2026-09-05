@@ -66,6 +66,19 @@ test('real Colyseus clients: capacity, ready/start authority, inputs, timeout, c
         await assert.rejects(client.joinById(room.roomId));
       } finally { await Promise.all(rooms.map(r=>r.connection.isOpen?r.leave().catch(()=>{}):Promise.resolve())); }
     });
+    await t.test('snapshot cadence preserves partial intervals at 60 Hz instead of dropping time',async()=>{
+      const host=await client.create('race',{capacity:4});const seen=observe(host);
+      host.send('ready',true);await until(()=>seen.lobby?.members[0].ready===true);
+      host.send('start');await until(()=>!!seen.snapshot);
+      const room=matchMaker.getLocalRoomById(host.roomId) as RaceRoom;
+      room.setSimulationInterval();
+      try{
+        const before=room.sequence;
+        for(let i=0;i<120;i++)room.tick(16);
+        const sent=room.sequence-before;
+        assert.ok(sent>=114 && sent<=116,`Expected about 60 Hz across 1.92s; received ${sent} snapshots`);
+      }finally{room.setSimulationInterval(()=>{},1000/60);await host.leave();}
+    });
     await t.test('host departure closes lobby and fresh room gets new code',async()=>{
       const host=await client.create('race',{capacity:2});observe(host);
       const guest=await client.joinById(host.roomId);const seen=observe(guest);
