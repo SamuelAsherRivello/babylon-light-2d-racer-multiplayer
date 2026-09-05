@@ -5,7 +5,7 @@
 # 2D Racer Multiplayer
 
 <!-- AI: Replace {PROJECT_NAME} with the requested project display name. Write one short introduction sentence explaining what the project does and who it is for, based on implemented behavior. -->
-2D Racer Multiplayer is a self-hosted cartoon racer with single-player and invite-code Colyseus races for two to four friends.
+2D Racer Multiplayer is a self-hosted cartoon racer with single-player and invite-code Colyseus rooms for one to four players.
 
 ## Images
 
@@ -30,7 +30,7 @@
 ## Getting Started
 
 <!-- AI: Briefly state required tools or prerequisites, using versions supported by the repository. Keep setup steps in the subsections below and use the fewest practical steps. Do not add a separate commands section. -->
-Install Node.js 24 and npm. Playing requires a keyboard and a WebGPU-capable browser/device, such as current Microsoft Edge or Google Chrome.
+Install Node.js 24 and npm. Playing requires a WebGPU-capable browser/device, such as current Microsoft Edge or Google Chrome.
 
 ### 📦 Build Project
 
@@ -51,7 +51,7 @@ Install Node.js 24 and npm. Playing requires a keyboard and a WebGPU-capable bro
 ## Project Overview
 
 <!-- AI: Summarize the project's purpose, main capabilities, and intended use cases. Describe current implementation; label planned capabilities explicitly rather than presenting them as complete. Keep detailed tooling under Project Details. -->
-In single player, drive the yellow car with **W** to accelerate, **S** to brake, and **A/D** to steer. The fixed-angle camera follows your car around a winding track with two jumps. Grass slows you down; tire particles and synthesized sounds react to driving. Complete one valid lap within **30 seconds** to win, regardless of position. Single player retains win/loss, Retry, and mute controls. Multiplayer hosts choose 2–4 total players, share a six-character code, wait for everyone to join and mark Ready, and start a synchronized countdown. The first valid finisher wins. On finish, timeout, or racing disconnect, the room closes and everyone returns to the main menu; host/join again for each round.
+In single player, drive the yellow car with **W** to accelerate, **S** to brake, and **A/D** to steer. A centered 9:16 play area fits portrait screens and desktop windows. On-screen steering, gas, and brake buttons support simultaneous touches alongside WASD. The fixed-angle camera follows your car around a winding track with two jumps. Grass slows you down; tire particles and synthesized sounds react to driving. Complete one valid lap within **30 seconds** to win, regardless of position. Single player retains win/loss, Retry, and mute controls. Multiplayer hosts choose a room maximum of 2–4 players, share a six-character code, and can start alone or with the players currently present once everyone is Ready. Empty seats remain empty. The first valid finisher wins. On finish, timeout, or racing disconnect, the room closes and everyone returns to the main menu; host/join again for each round.
 
 ### 📝 Documentation
 

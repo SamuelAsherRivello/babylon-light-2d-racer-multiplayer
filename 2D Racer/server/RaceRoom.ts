@@ -31,11 +31,11 @@ export class RaceRoom extends Room {
     });
     this.onMessage('start',client=>{
       if(client.sessionId!==this.hostId || this.running) return;
-      if(this.members.size!==this.capacity || ![...this.members.values()].every(m=>m.ready)) {
-        client.send('notice','Wait for every player to join and mark Ready.'); return;
+      if(this.members.size===0 || ![...this.members.values()].every(m=>m.ready)) {
+        client.send('notice','Everyone currently in the room must mark Ready.'); return;
       }
       this.running=true; void this.lock();
-      this.race=createRace(this.capacity); startRace(this.race);
+      this.race=createRace(this.members.size); startRace(this.race);
       this.sendLobby(); this.broadcastSnapshot();
     });
     this.onMessage('input',(client,value:unknown)=>{

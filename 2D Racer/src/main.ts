@@ -1,4 +1,5 @@
 import './style.css';
+import { createDrivingControls } from './driving-controls';
 import { createRace, startRace, stepRace } from './simulation';
 import { createWorld } from './world';
 import { createUI } from './ui';
@@ -14,7 +15,7 @@ let networkMode=false, localId=0, ready=false, lastSequence=0;
 const input:Input={throttle:false,brake:false,left:false,right:false};
 const audio=createAudio();
 const effects:GameEvent[]=[];
-const clearInput=()=>{input.throttle=input.brake=input.left=input.right=false;if(networkMode)network.clearInput();};
+const clearInput=()=>{controls.clear();if(networkMode)network.clearInput();};
 const reset=(message='')=>{networkMode=false;target=undefined;clearInput();state=createRace();multiplayerUI.reset(message);};
 const begin=()=>{
   if(!ready)return;
@@ -65,12 +66,7 @@ const multiplayerUI=createMultiplayerUI(root,{
 multiplayerUI.busy(true);
 multiplayerUI.notice('Loading the track…');
 ui.update(state);
-const keys:Record<string,keyof Input>={KeyW:'throttle',KeyS:'brake',KeyA:'left',KeyD:'right'};
-window.addEventListener('keydown',event=>{
-  if(event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement)return;
-  const key=keys[event.code];if(key){event.preventDefault();input[key]=true;}
-});
-window.addEventListener('keyup',event=>{const key=keys[event.code];if(key){input[key]=false;}});
+const controls=createDrivingControls(root,input);
 window.addEventListener('blur',clearInput);
 document.addEventListener('visibilitychange',clearInput);
 window.addEventListener('pagehide',()=>network.leave());
@@ -96,7 +92,7 @@ async function boot(){
         accumulated+=document.hidden?0:dt;
         while(accumulated>=1/120){effects.push(...stepRace(state,input,1/120));accumulated-=1/120;}
       }
-      world.update(state,dt);audio.update(state,effects.splice(0),dt);ui.update(state);requestAnimationFrame(frame);
+      world.update(state,dt);audio.update(state,effects.splice(0),dt);ui.update(state);controls.setEnabled(state.phase==='racing'||state.phase==='countdown');requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
     if(import.meta.env.DEV)Object.assign(window,{__rally:{get state(){return state;},input}});

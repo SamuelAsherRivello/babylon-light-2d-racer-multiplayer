@@ -51,6 +51,21 @@ test('real Colyseus clients: capacity, ready/start authority, inputs, timeout, c
         await assert.rejects(client.joinById(rooms[0].roomId));
       }finally{await Promise.all(rooms.map(r=>r.connection.isOpen?r.leave().catch(()=>{}):Promise.resolve()));}
     });
+    for (const count of [1,2,3]) await t.test(`host starts with ${count} players in a four-seat room`, async () => {
+      const rooms:Room[]=[];
+      try {
+        rooms.push(await client.create('race',{capacity:4}));const seen=[observe(rooms[0])];
+        for(let i=1;i<count;i++){rooms.push(await client.joinById(rooms[0].roomId));seen.push(observe(rooms[i]));}
+        await until(()=>seen[0].lobby?.members.length===count);
+        const room=matchMaker.getLocalRoomById(rooms[0].roomId) as RaceRoom;
+        rooms[0].send('start');await new Promise(r=>setTimeout(r,40));assert.equal(room.running,false);
+        for(const player of rooms)player.send('ready',true);
+        await until(()=>seen[0].lobby!.members.every(m=>m.ready));
+        rooms[0].send('start');await until(()=>seen.every(s=>s.snapshot?.race.phase==='countdown'));
+        assert.equal(room.race!.cars.length,count,'spawn only the players present, with no empty seats or bots');
+        await assert.rejects(client.joinById(room.roomId));
+      } finally { await Promise.all(rooms.map(r=>r.connection.isOpen?r.leave().catch(()=>{}):Promise.resolve())); }
+    });
     await t.test('host departure closes lobby and fresh room gets new code',async()=>{
       const host=await client.create('race',{capacity:2});observe(host);
       const guest=await client.joinById(host.roomId);const seen=observe(guest);

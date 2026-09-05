@@ -7,7 +7,7 @@ export async function createWorld(canvas: HTMLCanvasElement) {
   const engine = await createEngine(canvas, { maxDevicePixelRatio: 1.5, msaaSamples: 4 });
   const scene = createSceneContext(engine);
   scene.clearColor = { r: 0.56, g: 0.79, b: 0.87, a: 1 };
-  const camera = createArcRotateCamera(-Math.PI / 2, 0.62, canvas.clientWidth < 650 ? 68 : 58, { x: 0, y: 0, z: 0 });
+  const camera = createArcRotateCamera(-Math.PI / 2, 0.62, 72, { x: 0, y: 0, z: 0 });
   camera.fov = 0.82;
   camera.farPlane = 600;
   scene.camera = camera;
@@ -222,7 +222,7 @@ export async function createWorld(canvas: HTMLCanvasElement) {
         p.mesh.scaling.x = p.mesh.scaling.y = p.mesh.scaling.z = scale;
       }
     },
-    resize() { resizeEngine(engine); camera.radius = canvas.clientWidth < 650 ? 68 : 58; },
+    resize() { resizeEngine(engine); },
     dispose() { disposeEngine(engine); },
   };
 }

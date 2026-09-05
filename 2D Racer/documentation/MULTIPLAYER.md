@@ -18,12 +18,12 @@ npm run play
 Keep that terminal running and open **http://127.0.0.1:2567/**. `npm run play` builds the game and starts the server. Later, `npm start` reuses the existing build. Press Ctrl+C in the server terminal to stop it.
 
 1. For one player, click **Single Player** to race three AI cars. This mode does not create a network room.
-2. For multiplayer, open the URL in **two, three, or four browser tabs/windows**. Each instance has a separate connection; no extra server process is needed.
-3. In one instance, enter a name, choose the total player count (including the host), and click **Host Multiplayer**.
+2. For multiplayer, open the URL in **one, two, three, or four browser tabs/windows**. Each instance has a separate connection; no extra server process is needed.
+3. In one instance, enter a name, choose the maximum player count (including the host), and click **Host Multiplayer**.
 4. Copy the six-character code. Send it to friends outside the game, or paste it into the other instances' **Invite code** field and click **Join Multiplayer**. Everyone must use the same server.
 5. Everyone clicks **Ready**. A newly joined or departed player clears readiness, so finish assembling the group before readying up.
-6. Once the selected number of players is present and all are ready, the host clicks **Start Race**. All players receive the same three-second countdown.
-7. Hold **W** to accelerate, **S** to brake, and **A/D** to steer relative to your own car. Each camera follows its own player's car; the lobby color identifies it.
+6. The host can click **Start Game** with one, two, three, or four players currently present, once everyone present is Ready. Unused seats do not block starting. All players receive the same three-second countdown.
+7. Hold **W** to accelerate, **S** to brake, and **A/D** to steer relative to your own car, or hold the on-screen steering and gas/brake buttons. Multiple touches and keyboard input can be used together. Each camera follows its own player's car; the lobby color identifies it.
 
 In multiplayer, the **first human to complete a valid lap within 30 seconds wins**. If nobody finishes, the round times out. The result appears on everyone's main menu immediately, the room closes, and the code expires. Host and join again to play another round. Single player retains its original timed-lap rules and Retry screen.
 
@@ -128,7 +128,7 @@ GitHub Pages can host only the frontend, **not this Node server**. The optional 
 
 - **Cannot connect:** keep the server terminal running, open `/health` on the same server, and check every player uses the same server address.
 - **Invalid/full/expired code:** copy the current six-character code, check the chosen player count, and host a new room after every completed or cancelled race.
-- **Start disabled:** fill all selected seats, then have everyone click Ready. Only the host has Start Race.
+- **Start disabled:** everyone currently present must click Ready, including the host. Only the host has Start Game. The host can start alone; empty seats never block the start.
 - **No rendering:** confirm WebGPU is available on the device and the URL is localhost or HTTPS.
 - **Friends cannot reach your localhost URL:** localhost always means their own machine. Use the SSH tunnel or HTTPS host instructions.
 - **Server reboot / connection loss:** rooms are temporary; everyone hosts/joins again.
