@@ -16,7 +16,7 @@
 ## Demo
 
 <!-- AI: Replace both {demo_url} occurrences with the verified public demo URL. Check deployment configuration or a confirmed deployed site; do not assume a hosting URL. Keep the placeholder if no demo is available. -->
-* Run the self-hosted game at [localhost:2567](http://127.0.0.1:2567/) after setup below. No public multiplayer server is deployed.
+* [Play the demo](https://samuelasherrivello.github.io/babylon-light-2d-racer-multiplayer/) — **single player only**. GitHub Pages hosts static game files, not the Colyseus server. For multiplayer, [run the server locally or on your own host](2D%20Racer/documentation/MULTIPLAYER.md).
 
 ## Table of Contents
 
@@ -46,7 +46,7 @@ Install Node.js 24 and npm. Playing requires a WebGPU-capable browser/device, su
 
 <!-- AI: Describe the repository's existing release workflow in the fewest steps, based on checked-in workflows or release scripts. Distinguish builds, tags, releases, and deployment accurately. If no release process exists, retain a placeholder rather than inventing one. Documentation edits do not authorize publishing or changing Git history. -->
 1. Run `npm test` and `npm run build` in `2D Racer/`, then publish a version tag as a [GitHub Release](https://github.com/SamuelAsherRivello/babylon-light-2d-racer-multiplayer/releases/new) targeting `main`.
-2. Update the self-hosted checkout, install dependencies, rebuild, and restart the server using the [server guide](2D%20Racer/documentation/MULTIPLAYER.md). Publishing a release does not deploy the server.
+2. Update the self-hosted checkout, install dependencies, rebuild, and restart the server using the [server guide](2D%20Racer/documentation/MULTIPLAYER.md). Publishing a release does not deploy the server. Run the **Deploy live demo** GitHub Actions workflow to update the single-player Pages demo.
 
 ## Project Overview
 

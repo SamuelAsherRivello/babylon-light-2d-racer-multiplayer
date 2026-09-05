@@ -7,7 +7,7 @@
 - `screenshot01.png` is an actual portrait multiplayer guest view with virtual driving controls.
 - Dependency audit reported zero vulnerabilities.
 
-The Node server serves both the built frontend and Colyseus WebSockets at `http://127.0.0.1:2567/`. CI runs tests and builds. The optional manual Pages workflow deploys only the frontend and requires a separately hosted server URL.
+The Node server serves both the built frontend and Colyseus WebSockets at `http://127.0.0.1:2567/`. CI runs tests and builds. The manual Pages workflow deploys a labeled single-player-only frontend; the local self-hosted build retains multiplayer.
 
 Internet hosting instructions are provided, but a public server and four separate physical machines have not been tested. The optional Docker configuration has not been executed because Docker is unavailable on this development machine.
 

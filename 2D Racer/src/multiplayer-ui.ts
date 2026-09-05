@@ -1,15 +1,22 @@
 import type { Lobby } from './protocol';
 
 export function createMultiplayerUI(root:HTMLElement,callbacks:{host:(endpoint:string,name:string,count:number)=>void;join:(endpoint:string,name:string,code:string)=>void;ready:(value:boolean)=>void;start:()=>void;leave:()=>void}) {
+  const demoOnly=import.meta.env.VITE_SINGLE_PLAYER_DEMO==='true';
   root.classList.add('multiplayer-ui');
   root.querySelector('.start-button')!.textContent='SINGLE PLAYER';
-  root.querySelector('.intro')!.textContent='Race the clock solo, or race your friends.';
+  root.querySelector('.intro')!.textContent=demoOnly?'SINGLE-PLAYER DEMO · Race the clock solo.':'Race the clock solo, or race your friends.';
   const controls=document.createElement('div');controls.className='multiplayer-controls';
   controls.innerHTML=`<label>Your name<input class="racer-name" maxlength="16" placeholder="Racer" autocomplete="nickname"></label>
     <div class="host-row"><label>Max players<select class="room-capacity"><option value="2">2 players</option><option value="3">3 players</option><option value="4" selected>4 players</option></select></label><button class="secondary host-button">HOST MULTIPLAYER</button></div>
     <div class="join-row"><label>Invite code<input class="join-code" maxlength="6" placeholder="ABC234" autocapitalize="characters" spellcheck="false"></label><button class="secondary join-button">JOIN MULTIPLAYER</button></div>
     <details><summary>Server connection</summary><label>Server address<input class="server-address" type="url" aria-label="Server address"></label><p>All friends must use the same server. Local setup: open this game at localhost:2567.</p></details>`;
   root.querySelector('.start-button')!.after(controls);
+  controls.hidden=demoOnly;
+  if(demoOnly){
+    const explanation=document.createElement('p');explanation.className='tip';
+    explanation.innerHTML='Multiplayer requires a separately running Colyseus server; GitHub Pages cannot run it. <a href="https://github.com/SamuelAsherRivello/babylon-light-2d-racer-multiplayer/blob/main/2D%20Racer/documentation/MULTIPLAYER.md">Multiplayer setup instructions</a>.';
+    controls.after(explanation);
+  }
   const notice=document.createElement('p');notice.className='session-notice';notice.setAttribute('role','status');root.querySelector('.intro')!.after(notice);
   const lobbyPanel=document.createElement('section');lobbyPanel.className='lobby-panel';lobbyPanel.hidden=true;
   lobbyPanel.setAttribute('aria-label','Multiplayer lobby');

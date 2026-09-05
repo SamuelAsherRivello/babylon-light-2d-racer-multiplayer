@@ -14,9 +14,8 @@ concurrency:
 
 jobs:
   deploy:
-    if: vars.MULTIPLAYER_SERVER_URL != ''
     env:
-      VITE_MULTIPLAYER_SERVER: ${{ vars.MULTIPLAYER_SERVER_URL }}
+      VITE_SINGLE_PLAYER_DEMO: 'true'
     defaults:
       run:
         working-directory: '2D Racer'

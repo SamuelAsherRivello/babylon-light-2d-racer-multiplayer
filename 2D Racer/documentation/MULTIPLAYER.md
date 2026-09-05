@@ -122,7 +122,7 @@ The container listens on `0.0.0.0` internally; the command above publishes it on
 
 Self-hosting locally has no hosting-service fee. An existing SSH-accessible host also works without a Colyseus Cloud subscription. If you later choose a free managed Node host, it must support a persistent Node process and WebSockets. Render's free web services are one option to evaluate, but sleep after 15 minutes idle, may take about a minute to wake, and can restart; see [Render's current limitations](https://render.com/docs/free). No external host was provisioned by this implementation.
 
-GitHub Pages can host only the frontend, **not this Node server**. The optional Pages workflow requires repository variable `MULTIPLAYER_SERVER_URL` containing an HTTPS/WSS server address. For the easiest setup, serve both frontend and server together using `npm run play`.
+GitHub Pages can host only the frontend, **not this Node server**. The Pages workflow builds a clearly labeled single-player-only demo with `VITE_SINGLE_PLAYER_DEMO=true`; host/join controls are hidden in that build. Normal local/server builds keep multiplayer enabled. For the easiest setup, serve both frontend and server together using `npm run play`.
 
 ## Troubleshooting
 
