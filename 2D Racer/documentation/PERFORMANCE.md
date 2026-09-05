@@ -9,6 +9,8 @@ The original snapshot accumulator discarded its remainder after every send. Four
 - One local SDK input-to-authoritative-motion sample: 16.5 ms after the final change. This is a sample, not a latency percentile.
 - Four real Edge browser clients joined, readied and drove using keyboard events: approximately 32 ms from the test trigger to visible local motion on each client, 56.2 received updates/second in the final two-second window, and 56.6 render FPS each. Trigger timing includes Playwright event dispatch.
 
+A deterministic four-car constant-velocity replay also passes at 30, 60 and 120 render Hz with ordered packet delays varying from 10 to 30 ms, including batched delivery. After warm-up, every sampled car advances uniformly. This checks interpolation continuity for that synthetic pattern; it does not measure device FPS or arbitrary internet conditions.
+
 These are localhost measurements on one physical machine. Internet latency and other hardware remain unmeasured. Render FPS and network update rate are separate metrics.
 
 Run `npm exec -- tsx scripts/profile-network.ts` with the local server running for a repeatable four-connection network check. The script closes its test rooms afterwards.
