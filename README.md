@@ -2,10 +2,10 @@
 <!-- AI: Preserve the creator banner unless a replacement is requested. Update its relative path if assets move and verify the file exists with matching filename capitalization. -->
 ![Samuel Asher Rivello](2D%20Racer/documentation/samuel-asher-rivello-banner.png)
 
-# 2D Racer
+# 2D Racer Multiplayer
 
 <!-- AI: Replace {PROJECT_NAME} with the requested project display name. Write one short introduction sentence explaining what the project does and who it is for, based on implemented behavior. -->
-2D Racer is a cartoon arcade racing game for keyboard players: finish one lap against three rivals before the thirty-second timer expires.
+2D Racer Multiplayer is a self-hosted cartoon racer with single-player and invite-code Colyseus races for two to four friends.
 
 ## Images
 
@@ -16,7 +16,7 @@
 ## Demo
 
 <!-- AI: Replace both {demo_url} occurrences with the verified public demo URL. Check deployment configuration or a confirmed deployed site; do not assume a hosting URL. Keep the placeholder if no demo is available. -->
-* [Play 2D Racer](https://samuelasherrivello.github.io/babylon-light-2d-racer/)
+* Run the self-hosted game at [localhost:2567](http://127.0.0.1:2567/) after setup below. No public multiplayer server is deployed.
 
 ## Table of Contents
 
@@ -40,31 +40,33 @@ Install Node.js 24 and npm. Playing requires a keyboard and a WebGPU-capable bro
 ### 📦 Run Project
 
 <!-- AI: Replace {command} with the actual local launch command or editor action. State where to run it and how to open the app if needed. Refer to the printed URL when the port can vary. Avoid repeating completed build/setup steps. -->
-1. From `2D Racer/`, run `npm run dev` and open the printed local URL.
+1. From `2D Racer/`, run `npm start` after building, then open [localhost:2567](http://127.0.0.1:2567/) in one to four browser instances. See the [full server and multiplayer guide](2D%20Racer/documentation/MULTIPLAYER.md).
 
 ### 📦 Release Version
 
 <!-- AI: Describe the repository's existing release workflow in the fewest steps, based on checked-in workflows or release scripts. Distinguish builds, tags, releases, and deployment accurately. If no release process exists, retain a placeholder rather than inventing one. Documentation edits do not authorize publishing or changing Git history. -->
-1. Publish a new version tag as a [GitHub Release](https://github.com/SamuelAsherRivello/babylon-light-2d-racer/releases/new) targeting `main`.
-2. Wait for [Deploy live demo](https://github.com/SamuelAsherRivello/babylon-light-2d-racer/actions/workflows/deploy-pages.yml), then open the Demo link above.
+1. Run `npm test` and `npm run build` in `2D Racer/`, then publish a version tag as a [GitHub Release](https://github.com/SamuelAsherRivello/babylon-light-2d-racer-multiplayer/releases/new) targeting `main`.
+2. Update the self-hosted checkout, install dependencies, rebuild, and restart the server using the [server guide](2D%20Racer/documentation/MULTIPLAYER.md). Publishing a release does not deploy the server.
 
 ## Project Overview
 
 <!-- AI: Summarize the project's purpose, main capabilities, and intended use cases. Describe current implementation; label planned capabilities explicitly rather than presenting them as complete. Keep detailed tooling under Project Details. -->
-Drive the yellow car with **W** to accelerate, **S** to brake, and **A/D** to steer. The fixed-angle camera follows your car around a winding track with two jumps. Grass slows you down; tire particles and synthesized sounds react to driving. Complete one valid lap within **30 seconds** to win, regardless of position. Start, win/loss, Retry, and mute controls complete the game flow.
+In single player, drive the yellow car with **W** to accelerate, **S** to brake, and **A/D** to steer. The fixed-angle camera follows your car around a winding track with two jumps. Grass slows you down; tire particles and synthesized sounds react to driving. Complete one valid lap within **30 seconds** to win, regardless of position. Single player retains win/loss, Retry, and mute controls. Multiplayer hosts choose 2–4 total players, share a six-character code, wait for everyone to join and mark Ready, and start a synchronized countdown. The first valid finisher wins. On finish, timeout, or racing disconnect, the room closes and everyone returns to the main menu; host/join again for each round.
 
 ### 📝 Documentation
 
 <!-- AI: Link to the main documentation files that actually exist using relative Markdown links and a short purpose for each. Update links when files move; do not reference documentation inherited from another project unless present here. -->
 - [README.md](README.md): Setup, controls, and release instructions.
+- [Multiplayer and server setup](2D%20Racer/documentation/MULTIPLAYER.md): Complete local, SSH-tunnel, HTTPS, and container instructions.
 
 ### 📝 Structure
 
 <!-- AI: Replace PROJECT_NAME with the actual main project directory and list only the few folders needed to understand the repository. Check paths and capitalization. Omit generated output, dependency folders, and exhaustive file inventories. -->
 - `2D Racer/src/`: Game simulation, Babylon Lite rendering, menus, and audio.
-- `2D Racer/tests/`: Driving, race-rule, and audio tests.
+- `2D Racer/server/`: Self-hosted Colyseus rooms and the HTTP/WebSocket server.
+- `2D Racer/tests/`: Driving, audio, and real-client multiplayer tests.
 - `2D Racer/documentation/`: Creator banner and current gameplay screenshot.
-- `.github/workflows/`: Release-triggered GitHub Pages deployment.
+- `.github/workflows/`: CI tests and optional manual frontend-only Pages deployment.
 
 
 
@@ -72,7 +74,7 @@ Drive the yellow car with **W** to accelerate, **S** to brake, and **A/D** to st
 ## Project Details
 
 <!-- AI: Replace this placeholder with a short description of implementation details useful to developers. Verify the stack from repository files and avoid repeating the overview or claiming unverified package versions. -->
-TypeScript modules share one race-state contract. Babylon Lite 1.27.0 renders procedural 3D art with 2D-style driving; Web Audio synthesizes effects without remote assets. Vite builds a static site with relative asset paths for GitHub Pages. From `2D Racer/`, run `npm test` for the ten simulation/audio tests.
+TypeScript modules share one race-state contract. Babylon Lite 1.27.0 renders procedural 3D art with 2D-style driving; Web Audio synthesizes effects without remote assets. Vite builds a static site with relative asset paths for GitHub Pages. The Colyseus server authoritatively simulates human inputs and serves the built game on port 2567. Run `npm test` from `2D Racer/` for simulation, audio, and room integration checks.
 
 ### 📦 AI
 
@@ -85,6 +87,7 @@ TypeScript modules share one race-state contract. Babylon Lite 1.27.0 renders pr
 
 <!-- AI: List the key packages actually used, based on manifests and configuration. Link each name to its official site or documentation and describe its role briefly. Replace template examples that do not apply. Include versions only when useful and verified against the repository. -->
 - [Babylon Lite](https://www.babylonjs.com/lite/): WebGPU rendering with `@babylonjs/lite` 1.27.0.
+- [Colyseus](https://docs.colyseus.io/): Room codes, WebSocket connections, lobby coordination, and server-owned racing.
 - [TypeScript](https://www.typescriptlang.org/): Typed game modules.
 - [Vite](https://vite.dev/): Static builds and the local development server.
 

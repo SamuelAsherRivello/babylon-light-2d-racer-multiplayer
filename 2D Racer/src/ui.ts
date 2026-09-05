@@ -52,6 +52,7 @@ export function createUI(root: HTMLElement, callbacks: { onStart: () => void; on
       const player = state.cars[0];
       speed.textContent = String(Math.round(Math.abs(player?.speed ?? 0) * 3.6));
       position.textContent = String(state.position);
+      position.nextElementSibling!.textContent = ` / ${state.cars.length}`;
       const pct = Math.min(100, Math.max(0, state.lapProgress * 100));
       progress.textContent = `${Math.floor(pct)}%`; fill.style.width = `${pct}%`;
       surface.textContent = player?.airborne ? 'BIG AIR!' : player?.offroad ? 'GRASS · SLOW' : 'ON TRACK';

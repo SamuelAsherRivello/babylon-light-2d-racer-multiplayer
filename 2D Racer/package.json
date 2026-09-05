@@ -1,13 +1,29 @@
 {
-  "name": "pocket-rally",
+  "name": "babylon-light-2d-racer-multiplayer",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "start": "tsx server/index.ts",
+    "play": "npm run build && npm start",
+    "server": "tsx watch server/index.ts"
   },
-  "dependencies": { "@babylonjs/lite": "1.27.0" },
-  "devDependencies": { "typescript": "latest", "vite": "latest", "tsx": "latest", "@playwright/test": "latest" }
+  "dependencies": {
+    "@babylonjs/lite": "1.27.0",
+    "@colyseus/core": "0.18.10",
+    "@colyseus/sdk": "0.18.2",
+    "@colyseus/ws-transport": "0.18.2",
+    "express": "5.2.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "latest",
+    "@types/express": "5.0.6",
+    "@types/node": "26.4.1",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  }
 }

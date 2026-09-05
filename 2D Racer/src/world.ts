@@ -199,6 +199,7 @@ export async function createWorld(canvas: HTMLCanvasElement) {
       emitClock += dt;
       const emitting = emitClock > 0.065 && state.phase === 'racing';
       if (emitting) emitClock = 0;
+      for(const [id,visual] of cars){const size=state.cars.some(car=>car.id===id)?1:0;visual.root.scaling.x=visual.root.scaling.y=visual.root.scaling.z=size;if(!size)visual.shadow.position.y=-20;else visual.shadow.position.y=.055;}
       for (const car of state.cars) {
         const visual = cars.get(car.id)!;
         visual.root.position.x = car.x; visual.root.position.y = car.y; visual.root.position.z = car.z;

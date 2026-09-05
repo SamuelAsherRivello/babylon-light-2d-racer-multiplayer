@@ -6,8 +6,8 @@ const internals = new WeakMap<RaceState, Motion[]>();
 const colors = ['#ffca3a', '#ff597b', '#6bdbff', '#b09bff'];
 const angle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
 
-export function createRace(): RaceState {
-  const cars: Car[] = colors.map((color, id) => {
+export function createRace(count = 4): RaceState {
+  const cars: Car[] = colors.slice(0, count).map((color, id) => {
     const progress = wrap(-id * .009);
     const p = sampleTrack(progress);
     const lane = id % 2 ? 2 : -2;
@@ -20,12 +20,14 @@ export function createRace(): RaceState {
 }
 
 export function startRace(state: RaceState): void {
-  const fresh = createRace();
+  const fresh = createRace(state.cars.length);
+  delete state.winnerId;
   Object.assign(state, fresh, { phase: 'countdown' });
   internals.set(state, internals.get(fresh)!);
 }
 
-export function stepRace(state: RaceState, input: Input, dt: number): GameEvent[] {
+export interface MultiplayerStep { inputs: Input[]; onEvent?: (carId:number,event:GameEvent)=>void }
+export function stepRace(state: RaceState, input: Input, dt: number, multiplayer?: MultiplayerStep): GameEvent[] {
   const events: GameEvent[] = [];
   if (!Number.isFinite(dt) || dt <= 0) return events;
   let time = Math.min(dt, 60);
@@ -37,14 +39,15 @@ export function stepRace(state: RaceState, input: Input, dt: number): GameEvent[
       if (state.countdown < 1e-8) { state.countdown = 0; state.phase = 'racing'; events.push('go'); }
     } else {
       h = Math.min(h, state.remaining);
-      tick(state, input, h, events);
+      tick(state, input, h, events, multiplayer);
     }
     time -= h;
   }
   return events;
 }
 
-function tick(state: RaceState, input: Input, dt: number, events: GameEvent[]) {
+function tick(state: RaceState, input: Input, dt: number, events: GameEvent[], multiplayer?: MultiplayerStep) {
+  const emit = (id:number,event:GameEvent) => { if(id===0) events.push(event); multiplayer?.onEvent?.(id,event); };
   const motions = internals.get(state)!;
   state.elapsed += dt;
   state.remaining = Math.max(0, 30 - state.elapsed);
@@ -53,7 +56,7 @@ function tick(state: RaceState, input: Input, dt: number, events: GameEvent[]) {
     const nearest = trackDistance(car.x, car.z);
     car.offroad = nearest.distance > TRACK.width / 2;
     let steer: number, throttle: boolean, brake: boolean;
-    if (i === 0) { steer = Number(input.right) - Number(input.left); throttle = input.throttle; brake = input.brake; }
+    if (i === 0 || multiplayer) { const controls = multiplayer ? (multiplayer.inputs[i] ?? {throttle:false,brake:false,left:false,right:false}) : input; steer = Number(controls.right) - Number(controls.left); throttle = controls.throttle; brake = controls.brake; }
     else {
       const target = sampleTrack(nearest.progress + (5 + car.speed * .2) / TRACK_LENGTH);
       const lane = (i - 2) * 2;
@@ -81,18 +84,18 @@ function tick(state: RaceState, input: Input, dt: number, events: GameEvent[]) {
       if (along < ramp.length) { ground = ramp.height * along / ramp.length; rampIndex = index; }
     });
     if (!car.airborne && m.ramp >= 0 && rampIndex < 0 && car.y > .8 && car.speed > 5) {
-      car.airborne = true; m.vy = 5 + car.speed * .16; if (i === 0) events.push('jump');
+      car.airborne = true; m.vy = 5 + car.speed * .16; emit(i,'jump');
     }
     if (car.airborne) {
       m.vy -= 19 * dt; car.y += m.vy * dt;
-      if (car.y <= ground) { car.y = ground; car.airborne = false; m.vy = 0; if (i === 0) events.push('land'); }
+      if (car.y <= ground) { car.y = ground; car.airborne = false; m.vy = 0; emit(i,'land'); }
     } else car.y = ground;
     m.ramp = rampIndex;
     m.hitCooldown = Math.max(0, m.hitCooldown - dt);
     if (Math.abs(car.x) > 91 || Math.abs(car.z) > 91) {
       car.x = Math.max(-91, Math.min(91, car.x)); car.z = Math.max(-91, Math.min(91, car.z));
       car.speed *= .6; m.vx *= -.3; m.vz *= -.3;
-      if (i === 0 && m.hitCooldown === 0) { events.push('hit'); m.hitCooldown = .5; }
+      if (m.hitCooldown === 0) { emit(i,'hit'); m.hitCooldown = .5; }
     }
     const delta = angle((car.progress - m.previous) * Math.PI * 2) / (Math.PI * 2);
     // Reject discontinuities and off-track shortcuts; reversing subtracts lap progress.
@@ -101,9 +104,12 @@ function tick(state: RaceState, input: Input, dt: number, events: GameEvent[]) {
     const toGate = wrap(gateProgress - m.previous);
     if (delta > 0 && delta < .015 && toGate <= delta + 1e-8 && next.distance <= TRACK.width / 2 + 1) m.gate++;
     m.previous = car.progress;
-    if (i === 0) {
-      state.lapProgress = Math.max(0, Math.min(m.gate / 12, m.total));
-      if (m.gate > 12 && state.elapsed <= 30 + 1e-8) { state.phase = 'won'; state.lapProgress = 1; events.push('win'); }
+    car.lapProgress = Math.max(0, Math.min(m.gate / 12, m.total));
+    if(i===0) state.lapProgress = car.lapProgress;
+    if ((i===0 || multiplayer) && state.phase==='racing' && m.gate > 12 && state.elapsed <= 30 + 1e-8) {
+      state.phase = 'won'; state.winnerId = i; car.lapProgress=1;
+      if(i===0) state.lapProgress=1;
+      emit(i,'win');
     }
   });
   for (let i = 0; i < state.cars.length; i++) for (let j = i + 1; j < state.cars.length; j++) {
@@ -114,7 +120,7 @@ function tick(state: RaceState, input: Input, dt: number, events: GameEvent[]) {
       if (distance < .01) { dx = 1; dz = 0; }
       const push = (2.5 - distance) * .5 / Math.max(.01, Math.hypot(dx, dz));
       a.x += dx * push; a.z += dz * push; b.x -= dx * push; b.z -= dz * push;
-      if (i === 0 && motions[0]!.hitCooldown === 0) { a.speed *= .83; events.push('hit'); motions[0]!.hitCooldown = .6; }
+      for(const id of [i,j]) if ((id===0 || multiplayer) && motions[id]!.hitCooldown===0) { state.cars[id].speed*=.83; emit(id,'hit'); motions[id].hitCooldown=.6; }
     }
   }
   state.position = 1 + motions.slice(1).filter(m => m.total > motions[0]!.total).length;

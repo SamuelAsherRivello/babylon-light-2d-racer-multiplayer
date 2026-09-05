@@ -3,63 +3,103 @@ import { createRace, startRace, stepRace } from './simulation';
 import { createWorld } from './world';
 import { createUI } from './ui';
 import { createAudio } from './audio';
-import type { Input } from './types';
+import { createNetwork } from './network';
+import { createMultiplayerUI } from './multiplayer-ui';
+import type { Input, GameEvent, RaceState } from './types';
 
-const canvas = document.querySelector<HTMLCanvasElement>('#game')!;
-const state = createRace();
-const input: Input = { throttle: false, brake: false, left: false, right: false };
-const audio = createAudio();
-let ready = false;
-const clearInput = () => { input.throttle = input.brake = input.left = input.right = false; };
-const begin = () => {
-  if (!ready) return;
-  clearInput();
-  void audio.unlock().then(() => audio.update(state, ['start'], 0));
-  startRace(state);
+const canvas=document.querySelector<HTMLCanvasElement>('#game')!;
+const root=document.querySelector<HTMLElement>('#ui')!;
+let state=createRace(), target:RaceState|undefined;
+let networkMode=false, localId=0, ready=false, lastSequence=0;
+const input:Input={throttle:false,brake:false,left:false,right:false};
+const audio=createAudio();
+const effects:GameEvent[]=[];
+const clearInput=()=>{input.throttle=input.brake=input.left=input.right=false;if(networkMode)network.clearInput();};
+const reset=(message='')=>{networkMode=false;target=undefined;clearInput();state=createRace();multiplayerUI.reset(message);};
+const begin=()=>{
+  if(!ready)return;
+  network.leave();networkMode=false;target=undefined;multiplayerUI.reset();clearInput();state=createRace();
+  void audio.unlock().then(()=>audio.update(state,['start'],0));startRace(state);
 };
-const ui = createUI(document.querySelector<HTMLElement>('#ui')!, {
-  onStart: begin, onRetry: begin, onMute: (muted) => audio.setMuted(muted),
+const ui=createUI(root,{onStart:begin,onRetry:begin,onMute:value=>audio.setMuted(value)});
+const network=createNetwork({
+  lobby(data,sessionId){
+    localId=data.members.find(m=>m.sessionId===sessionId)?.carId??0;
+    multiplayerUI.lobby(data,sessionId);
+  },
+  snapshot(data){
+    if(!networkMode || data.sequence<=lastSequence)return;
+    lastSequence=data.sequence;
+    const local=data.race.cars.find(c=>c.id===localId);
+    if(!local)return;
+    const next={...data.race,cars:[local,...data.race.cars.filter(c=>c.id!==localId)],lapProgress:local.lapProgress??0,
+      position:1+data.race.cars.filter(c=>(c.lapProgress??0)>(local.lapProgress??0)).length};
+    if(!target)state=structuredClone(next);
+    target=next;multiplayerUI.racing();
+  },
+  effect:event=>effects.push(event),
+  closed(message,winnerId){
+    effects.push(winnerId===undefined?'lose':winnerId===localId?'win':'lose');reset(message);
+  },
+  notice:message=>multiplayerUI.notice(message),
 });
-ui.update(state);
-const keys: Record<string, keyof Input> = { KeyW: 'throttle', KeyS: 'brake', KeyA: 'left', KeyD: 'right' };
-window.addEventListener('keydown', (e) => {
-  const key = keys[e.code];
-  if (key) { e.preventDefault(); input[key] = true; }
-});
-window.addEventListener('keyup', (e) => {
-  const key = keys[e.code];
-  if (key) { e.preventDefault(); input[key] = false; }
-});
-window.addEventListener('blur', clearInput);
-document.addEventListener('visibilitychange', clearInput);
-
-async function boot() {
+async function connect(kind:'host'|'join',endpoint:string,name:string,countOrCode:number|string){
+  if(!ready)return;
+  networkMode=true;lastSequence=0;target=undefined;effects.length=0;clearInput();
+  multiplayerUI.busy(true);multiplayerUI.notice('Connecting to the race server…');
+  void audio.unlock();
   try {
-    const world = await createWorld(canvas);
-    ready = true;
-    window.addEventListener('resize', () => world.resize());
-    let last = performance.now();
-    let accumulated = 0;
-    const frame = (now: number) => {
-      const dt = document.hidden ? 0 : Math.min((now - last) / 1000, .1);
-      last = now;
-      accumulated += dt;
-      const events: ReturnType<typeof stepRace> = [];
-      while (accumulated >= 1 / 120) {
-        events.push(...stepRace(state, input, 1 / 120));
-        accumulated -= 1 / 120;
-      }
-      world.update(state, dt);
-      audio.update(state, events, dt);
-      ui.update(state);
-      requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-    // Development-only inspection supports reproducible local gameplay verification.
-    if (import.meta.env.DEV) Object.assign(window, { __rally: { state, input } });
-  } catch (error) {
-    console.error(error);
-    ui.showError(`The racer could not start. Use a browser with WebGPU enabled. ${error instanceof Error ? error.message : String(error)}`);
+    if(kind==='host')await network.host(endpoint,name,Number(countOrCode));
+    else await network.join(endpoint,name,String(countOrCode));
+    multiplayerUI.busy(false);network.stream(()=>({...input}));
+  } catch(error){
+    network.leave();reset(`Could not connect. Check the server address and room code. ${error instanceof Error?error.message.slice(0,160):''}`);
   }
+}
+const multiplayerUI=createMultiplayerUI(root,{
+  host:(endpoint,name,count)=>{void connect('host',endpoint,name,count);},
+  join:(endpoint,name,code)=>{void connect('join',endpoint,name,code);},
+  ready:value=>network.ready(value),start:()=>network.start(),
+  leave:()=>{network.leave();reset('You left the room.');},
+});
+multiplayerUI.busy(true);
+multiplayerUI.notice('Loading the track…');
+ui.update(state);
+const keys:Record<string,keyof Input>={KeyW:'throttle',KeyS:'brake',KeyA:'left',KeyD:'right'};
+window.addEventListener('keydown',event=>{
+  if(event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement || event.target instanceof HTMLTextAreaElement)return;
+  const key=keys[event.code];if(key){event.preventDefault();input[key]=true;}
+});
+window.addEventListener('keyup',event=>{const key=keys[event.code];if(key){input[key]=false;}});
+window.addEventListener('blur',clearInput);
+document.addEventListener('visibilitychange',clearInput);
+window.addEventListener('pagehide',()=>network.leave());
+async function boot(){
+  try{
+    const world=await createWorld(canvas);ready=true;multiplayerUI.busy(false);multiplayerUI.notice('');
+    window.addEventListener('resize',()=>world.resize());
+    let last=performance.now(),accumulated=0;
+    function frame(now:number){
+      const dt=Math.min((now-last)/1000,.1);last=now;
+      if(networkMode){
+        accumulated=0;
+        if(target){
+          const previous=state.cars;
+          state={...target,cars:target.cars.map(car=>{
+            const old=previous.find(c=>c.id===car.id);if(!old)return {...car};
+            const blend=1-Math.exp(-dt*28);
+            const headingDelta=Math.atan2(Math.sin(car.heading-old.heading),Math.cos(car.heading-old.heading));
+            return {...car,x:old.x+(car.x-old.x)*blend,z:old.z+(car.z-old.z)*blend,y:old.y+(car.y-old.y)*blend,heading:old.heading+headingDelta*blend};
+          })};
+        }
+      }else{
+        accumulated+=document.hidden?0:dt;
+        while(accumulated>=1/120){effects.push(...stepRace(state,input,1/120));accumulated-=1/120;}
+      }
+      world.update(state,dt);audio.update(state,effects.splice(0),dt);ui.update(state);requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    if(import.meta.env.DEV)Object.assign(window,{__rally:{get state(){return state;},input}});
+  }catch(error){console.error(error);ui.showError(`A WebGPU-capable browser is required. ${error instanceof Error?error.message:String(error)}`);}
 }
 void boot();

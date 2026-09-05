@@ -1,8 +1,6 @@
 name: Deploy live demo
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +14,9 @@ concurrency:
 
 jobs:
   deploy:
+    if: vars.MULTIPLAYER_SERVER_URL != ''
+    env:
+      VITE_MULTIPLAYER_SERVER: ${{ vars.MULTIPLAYER_SERVER_URL }}
     defaults:
       run:
         working-directory: '2D Racer'
