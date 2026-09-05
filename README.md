@@ -1,22 +1,22 @@
 <!-- AI: Customize this template from the target repository's actual files, configuration, and user instructions. Preserve the section order, heading styles, and concise format unless asked to change them. Replace placeholders only with verified information; leave unknown values as placeholders. Do not invent features, commands, URLs, contributors, or deployment behavior. Keep these instructions hidden as HTML comments. -->
 <!-- AI: Preserve the creator banner unless a replacement is requested. Update its relative path if assets move and verify the file exists with matching filename capitalization. -->
-![Samuel Asher Rivello](PROJECT_NAME/documentation/samuel-asher-rivello-banner.png)
+![Samuel Asher Rivello](2D%20Racer/documentation/samuel-asher-rivello-banner.png)
 
-# {PROJECT_NAME}
+# 2D Racer
 
 <!-- AI: Replace {PROJECT_NAME} with the requested project display name. Write one short introduction sentence explaining what the project does and who it is for, based on implemented behavior. -->
-Here is the project introduction sentence.
+2D Racer is a cartoon arcade racing game for keyboard players: finish one lap against three rivals before the thirty-second timer expires.
 
 ## Images
 
 <!-- AI: Use screenshots that exist in this repository and represent the current project. Keep relative paths, matching link href and image src, and the 400-pixel preview width. Replace placeholder alt text with a brief description. Preserve image order unless instructed otherwise; do not invent asset paths. -->
-<a href="PROJECT_NAME/documentation/screenshot01.png"><img src="PROJECT_NAME/documentation/screenshot01.png" width="400" alt="Screenshot placeholder" /></a>
+<a href="2D%20Racer/documentation/screenshot01.png"><img src="2D%20Racer/documentation/screenshot01.png" width="400" alt="Cartoon cars racing around the hillside circuit with tire smoke and the race HUD" /></a>
 
 
 ## Demo
 
 <!-- AI: Replace both {demo_url} occurrences with the verified public demo URL. Check deployment configuration or a confirmed deployed site; do not assume a hosting URL. Keep the placeholder if no demo is available. -->
-* [{demo_url}]({demo_url})
+* [Play 2D Racer](https://samuelasherrivello.github.io/babylon-light-2d-racer/)
 
 ## Table of Contents
 
@@ -30,37 +30,41 @@ Here is the project introduction sentence.
 ## Getting Started
 
 <!-- AI: Briefly state required tools or prerequisites, using versions supported by the repository. Keep setup steps in the subsections below and use the fewest practical steps. Do not add a separate commands section. -->
-Here is the getting started ...
+Install Node.js 24 and npm. Playing requires a keyboard and a WebGPU-capable browser/device, such as current Microsoft Edge or Google Chrome.
 
 ### 📦 Build Project
 
 <!-- AI: Replace {command} with the actual build command or required editor action. Verify it against manifests, scripts, or project settings. Specify the working directory and dependency installation when necessary; do not assume npm or a particular engine. -->
-1. Run `{command}`.
+1. From the repository root, run `cd "2D Racer"`, then `npm ci` and `npm run build`.
 
 ### 📦 Run Project
 
 <!-- AI: Replace {command} with the actual local launch command or editor action. State where to run it and how to open the app if needed. Refer to the printed URL when the port can vary. Avoid repeating completed build/setup steps. -->
-1. Run `{command}`.
+1. From `2D Racer/`, run `npm run dev` and open the printed local URL.
 
 ### 📦 Release Version
 
 <!-- AI: Describe the repository's existing release workflow in the fewest steps, based on checked-in workflows or release scripts. Distinguish builds, tags, releases, and deployment accurately. If no release process exists, retain a placeholder rather than inventing one. Documentation edits do not authorize publishing or changing Git history. -->
-1. Run `{command}`.
+1. Publish a new version tag as a [GitHub Release](https://github.com/SamuelAsherRivello/babylon-light-2d-racer/releases/new) targeting `main`.
+2. Wait for [Deploy live demo](https://github.com/SamuelAsherRivello/babylon-light-2d-racer/actions/workflows/deploy-pages.yml), then open the Demo link above.
 
 ## Project Overview
 
 <!-- AI: Summarize the project's purpose, main capabilities, and intended use cases. Describe current implementation; label planned capabilities explicitly rather than presenting them as complete. Keep detailed tooling under Project Details. -->
-Here is the project overview...
+Drive the yellow car with **W** to accelerate, **S** to brake, and **A/D** to steer. The fixed-angle camera follows your car around a winding track with two jumps. Grass slows you down; tire particles and synthesized sounds react to driving. Complete one valid lap within **30 seconds** to win, regardless of position. Start, win/loss, Retry, and mute controls complete the game flow.
 
 ### 📝 Documentation
 
 <!-- AI: Link to the main documentation files that actually exist using relative Markdown links and a short purpose for each. Update links when files move; do not reference documentation inherited from another project unless present here. -->
-- `README.md`: Primary documentation for this repo.
+- [README.md](README.md): Setup, controls, and release instructions.
 
 ### 📝 Structure
 
 <!-- AI: Replace PROJECT_NAME with the actual main project directory and list only the few folders needed to understand the repository. Check paths and capitalization. Omit generated output, dependency folders, and exhaustive file inventories. -->
-- `PROJECT_NAME`: Main project folder.
+- `2D Racer/src/`: Game simulation, Babylon Lite rendering, menus, and audio.
+- `2D Racer/tests/`: Driving, race-rule, and audio tests.
+- `2D Racer/documentation/`: Creator banner and current gameplay screenshot.
+- `.github/workflows/`: Release-triggered GitHub Pages deployment.
 
 
 
@@ -68,19 +72,21 @@ Here is the project overview...
 ## Project Details
 
 <!-- AI: Replace this placeholder with a short description of implementation details useful to developers. Verify the stack from repository files and avoid repeating the overview or claiming unverified package versions. -->
-Here is the project details ...
+TypeScript modules share one race-state contract. Babylon Lite 1.27.0 renders procedural 3D art with 2D-style driving; Web Audio synthesizes effects without remote assets. Vite builds a static site with relative asset paths for GitHub Pages. From `2D Racer/`, run `npm test` for the ten simulation/audio tests.
 
 ### 📦 AI
 
 <!-- AI: List AI tools and specification workflows configured or documented for this repository. Use official links and concise descriptions; verify current official wording before using a tagline. Treat inherited entries as examples to validate, not proof of installed tooling. -->
-- [Codex](https://openai.com/codex/): The best way to build with agents.
-- [OpenSpec](https://openspec.dev/): Specification-driven development
+- [Codex](https://openai.com/codex/): Agent-assisted implementation and verification.
+- [OpenSpec](https://openspec.dev/): Specification workflows provided in `.agents/skills/`.
 
 
 ### 📦 Packages
 
 <!-- AI: List the key packages actually used, based on manifests and configuration. Link each name to its official site or documentation and describe its role briefly. Replace template examples that do not apply. Include versions only when useful and verified against the repository. -->
-- [Vite](https://vite.dev/): JavaScript bundling and local dev server.
+- [Babylon Lite](https://www.babylonjs.com/lite/): WebGPU rendering with `@babylonjs/lite` 1.27.0.
+- [TypeScript](https://www.typescriptlang.org/): Typed game modules.
+- [Vite](https://vite.dev/): Static builds and the local development server.
 
 
 

@@ -1,0 +1,13 @@
+{
+  "name": "pocket-rally",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": { "@babylonjs/lite": "1.27.0" },
+  "devDependencies": { "typescript": "latest", "vite": "latest", "tsx": "latest", "@playwright/test": "latest" }
+}
